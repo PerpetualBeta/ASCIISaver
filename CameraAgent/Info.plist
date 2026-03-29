@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>ASCIISaverCameraAgent</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.jorviksoftware.ASCIISaverCameraAgent</string>
+    <key>CFBundleName</key>
+    <string>ASCII Saver Camera Agent</string>
+    <key>CFBundleDisplayName</key>
+    <string>ASCII Saver Camera Agent</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSCameraUsageDescription</key>
+    <string>ASCII Saver needs camera access to render your camera feed as ASCII art.</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 Jorvik Software. All rights reserved.</string>
+</dict>
+</plist>

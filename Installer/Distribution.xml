@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>ASCII Saver</title>
+    <welcome file="Welcome.html"/>
+    <conclusion file="Conclusion.html"/>
+    <os-check>
+        <allowed-os-versions>
+            <os-version min="14.0"/>
+        </allowed-os-versions>
+    </os-check>
+    <choices-outline>
+        <line choice="saver"/>
+        <line choice="agent"/>
+    </choices-outline>
+    <choice id="saver" title="ASCII Saver Screensaver" description="The screensaver bundle." enabled="true" selected="true">
+        <pkg-ref id="com.jorviksoftware.ASCIISaver.saver"/>
+    </choice>
+    <choice id="agent" title="Camera Agent" description="Background app that provides camera feed to the screensaver." enabled="true" selected="true">
+        <pkg-ref id="com.jorviksoftware.ASCIISaver.agent"/>
+    </choice>
+    <pkg-ref id="com.jorviksoftware.ASCIISaver.saver" version="1.0.0" onConclusion="none">ASCIISaver-saver.pkg</pkg-ref>
+    <pkg-ref id="com.jorviksoftware.ASCIISaver.agent" version="1.0.0" onConclusion="none">ASCIISaver-agent.pkg</pkg-ref>
+</installer-gui-script>

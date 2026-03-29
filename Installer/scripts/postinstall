@@ -1,0 +1,5 @@
+#!/bin/bash
+# Post-install: ensure correct permissions
+chmod -R 755 "$HOME/Library/Screen Savers/ASCIISaver.saver" 2>/dev/null || true
+chmod -R 755 "/Applications/ASCIISaverCameraAgent.app" 2>/dev/null || true
+exit 0
