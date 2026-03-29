@@ -35,7 +35,7 @@ The camera agent appears as a small icon in the menu bar. It only captures when 
 
 | Filter | Description |
 |--------|-------------|
-| **Classic** | Green ASCII characters on black — the default look |
+| **Classic** | Warm parchment-style ASCII — the default look |
 | **Matrix** | Matrix-style bright green with glow effect |
 | **Amber** | Warm amber terminal aesthetic with glow |
 | **Raw Feed** | Tinted grayscale camera image (not ASCII) |
