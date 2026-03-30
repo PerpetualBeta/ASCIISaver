@@ -22,10 +22,11 @@ A macOS screensaver that renders your live camera feed as ASCII art. Choose from
 
 ## Getting Started
 
-1. Open **System Settings → Screen Saver** and select **ASCII Saver**
-2. Launch **ASCII Saver Camera Agent** from Applications
-3. Grant camera permission when macOS prompts
-4. Lock your screen or wait for the screensaver to activate
+1. Open **System Settings → Wallpaper → Screen Saver** and select **ASCII Saver**
+2. If ASCII Saver doesn't appear in the list, close System Settings and reopen it — macOS sometimes needs a restart to detect newly installed screensavers
+3. Launch **ASCII Saver Camera Agent** from Applications — grant camera permission when macOS prompts
+4. Return to **System Settings → Wallpaper → Screen Saver**, select ASCII Saver, and configure your preferences (right-click the preview to access the options panel)
+5. You may need to close and reopen System Settings once more for the preview to display correctly — this is a macOS quirk, not a bug
 
 The camera agent appears as a small icon in the menu bar. It only captures when the screensaver is active.
 
@@ -86,7 +87,7 @@ Run the uninstall script:
 ```
 
 Or manually remove:
-- `~/Library/Screen Savers/ASCIISaver.saver`
+- `/Library/Screen Savers/ASCIISaver.saver`
 - `/Applications/ASCIISaverCameraAgent.app`
 - `/tmp/ASCIISaver/`
 
