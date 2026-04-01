@@ -27,7 +27,7 @@ pkgbuild \
     --root "$BUILD_DIR/ASCIISaver.saver" \
     --identifier "com.jorviksoftware.ASCIISaver.saver" \
     --version "$VERSION" \
-    --install-location "$HOME/Library/Screen Savers/ASCIISaver.saver" \
+    --install-location "/Library/Screen Savers/ASCIISaver.saver" \
     --scripts "$SCRIPT_DIR/scripts" \
     "$PKG_DIR/ASCIISaver-saver.pkg"
 
@@ -44,6 +44,7 @@ productbuild \
     --distribution "$SCRIPT_DIR/Distribution.xml" \
     --resources "$SCRIPT_DIR" \
     --package-path "$PKG_DIR" \
+    --sign "Developer ID Installer: Jonthan Hollin (EG86BCGUE7)" \
     "$BUILD_DIR/$PKG_NAME.pkg"
 
 echo "==> Cleaning up staging..."
