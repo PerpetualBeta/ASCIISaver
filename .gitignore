@@ -1,5 +1,4 @@
 .DS_Store
-_BuildOutput/
 build/
 DerivedData/
 *.xcuserdata

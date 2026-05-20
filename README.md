@@ -98,12 +98,14 @@ Requires Xcode 16+ and an Apple Developer certificate.
 ```bash
 git clone https://github.com/PerpetualBeta/ASCIISaver.git
 cd ASCIISaver
-./build.sh
+gmake build
 ```
 
+Requires GNU Make 4.x — `brew install make` installs it as `gmake`.
+
 This builds both targets and outputs:
-- `_BuildOutput/ASCIISaver.saver`
-- `_BuildOutput/ASCIISaverCameraAgent.app`
+- `.build/ASCIISaver.saver`
+- `.build/ASCIISaverCameraAgent.app`
 
 To build the installer package:
 
