@@ -39,6 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Persist the item's menu-bar slot across launches (and let a user ⌘-drag stick).
+        statusItem.autosaveName = "ASCIISaverStatusItem"
         statusItem.button?.title = "ASCII ⏸"
 
         let menu = NSMenu()
