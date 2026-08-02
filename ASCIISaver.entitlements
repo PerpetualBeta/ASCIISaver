@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Sparkle's XPC services and the framework itself are signed
+         separately from the host, so the host must not enforce library
+         validation. Suite-wide for every Sparkle app. -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <!-- The app captures the camera directly now. Previously this lived on
+         ASCIISaverCameraAgent, because a .saver inside legacyScreenSaver
+         could not hold the grant itself.
+
+         The application-groups entitlement that used to sit alongside it is
+         deliberately gone: it existed only so the agent and the saver could
+         share a frame buffer, and there is no second process any more. -->
+    <key>com.apple.security.device.camera</key>
+    <true/>
+</dict>
+</plist>

@@ -4,3 +4,17 @@ DerivedData/
 *.xcuserdata
 *.xcworkspace
 .build/
+
+# Dev-build output — `gmake dev-build` assembles the bundle in place.
+ASCII Saver.app/
+
+*.swiftmodule
+*.swiftdoc
+*.dSYM
+
+# NOTE: Resources/AppIcon.iconset/ is deliberately NOT ignored, unlike the
+# equivalent line in Rainy Day's .gitignore. Rainy Day draws its icon
+# procedurally with generate_icon.swift, so its iconset is a disposable
+# intermediate. ASCII Saver's icon is existing artwork recovered from the old
+# Xcode asset catalogue — the iconset is the only source there is, and
+# AppIcon.icns is built from it by `gmake icon`.

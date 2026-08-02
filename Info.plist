@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Moved from com.jorviksoftware.ASCIISaver when the .saver bundle and
+         its camera agent collapsed into this single app, bringing the
+         identifier in line with the rest of the suite. macOS treats the new
+         identifier as a different app, so the camera grant is requested
+         afresh; Migration.swift carries the settings across. -->
+    <key>CFBundleIdentifier</key>
+    <string>cc.jorviksoftware.ASCIISaver</string>
+    <key>CFBundleName</key>
+    <string>ASCII Saver</string>
+    <key>CFBundleDisplayName</key>
+    <string>ASCII Saver</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleExecutable</key>
+    <string>ASCIISaver</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <!-- Background utility: no Dock icon, no menu bar, no app-switcher
+         entry. The user experiences this app as a screensaver effect,
+         not as a foreground application. -->
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <!-- The whole reason this stopped being a .saver. A screensaver bundle
+         runs inside legacyScreenSaver and cannot hold its own TCC grant,
+         which is why the camera used to live in a separate agent process
+         feeding frames through shared memory. As a regular app it just asks. -->
+    <key>NSCameraUsageDescription</key>
+    <string>ASCII Saver renders your camera feed as live ASCII art. The video never leaves your Mac — it is not recorded, saved, or sent anywhere.</string>
+    <!-- Sparkle 2.x configuration. Suite-wide constants per the
+         conventions/sparkle-integration.md doc; only the feed URL
+         is per-app. ASCII Saver had no auto-update at all as a .saver. -->
+    <key>SUFeedURL</key>
+    <string>https://jorviksoftware.cc/appcasts/asciisaver.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>zVc7rs8EiLmlDAYpgaIItjnHtsCkvyVVub+I0/sSb3Q=</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
+</dict>
+</plist>
