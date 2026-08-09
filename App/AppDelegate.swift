@@ -29,7 +29,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// unlock — system idle keeps accumulating during sleep, so without this
     /// the saver fires the instant you log back in.
     private var activationAllowedAfter: Date = .distantPast
-    private var wakeObservers: [NSObjectProtocol] = []
+    /// Wake, unlock AND sleep observers — everything the saver has to react to when the machine's
+    /// visibility changes under it.
+    private var powerObservers: [NSObjectProtocol] = []
 
     private var statusItem: StatusItem?
     private var statusItemVisibilityObserver: NSObjectProtocol?
@@ -156,13 +158,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.dismissWindows(triggerLock: false)
         }
 
-        wakeObservers.append(ws.addObserver(
+        powerObservers.append(ws.addObserver(
             forName: NSWorkspace.didWakeNotification, object: nil, queue: .main, using: onWake))
-        wakeObservers.append(ws.addObserver(
+        powerObservers.append(ws.addObserver(
             forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main, using: onWake))
-        wakeObservers.append(dn.addObserver(
+        powerObservers.append(dn.addObserver(
             forName: Notification.Name("com.apple.screenIsUnlocked"),
             object: nil, queue: .main, using: onWake))
+
+        // ── displays asleep ──────────────────────────────────────────────
+        // The lock path already reasons about this: nobody can see the frames, and leaving the camera
+        // live behind a lock screen would be indefensible. Displays going into standby is exactly the
+        // same situation and had no handler at all — the saver stayed up, the render kept drawing to
+        // nothing, and the camera stayed on with the screens dark. That is the worse half: a camera
+        // running while the machine looks switched off.
+        //
+        // `willSleep` covers the whole machine going down. AVFoundation would stop the session itself
+        // there, but stopping first means the app's own state agrees with reality rather than finding
+        // out on wake.
+        let onScreensSleep: (Notification) -> Void = { [weak self] _ in
+            guard let self = self, !self.windows.isEmpty else { return }
+            asLog("screens slept — pausing render and stopping capture")
+            self.pauseAllWindows()
+            self.stopCapture()
+        }
+        powerObservers.append(ws.addObserver(
+            forName: NSWorkspace.screensDidSleepNotification, object: nil, queue: .main, using: onScreensSleep))
+        powerObservers.append(ws.addObserver(
+            forName: NSWorkspace.willSleepNotification, object: nil, queue: .main, using: onScreensSleep))
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -172,11 +195,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let obs = statusItemVisibilityObserver { NotificationCenter.default.removeObserver(obs) }
         let ws = NSWorkspace.shared.notificationCenter
         let dn = DistributedNotificationCenter.default()
-        for obs in wakeObservers {
+        for obs in powerObservers {
             ws.removeObserver(obs)
             dn.removeObserver(obs)
         }
-        wakeObservers.removeAll()
+        powerObservers.removeAll()
         cleanupLockObserver()
         dismissWindows(triggerLock: false)
         stopCapture()
