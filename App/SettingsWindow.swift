@@ -60,35 +60,40 @@ struct ASCIISaverSettingsContent: View {
     @AppStorage("glitchEnabled")        private var glitch: Bool = false
     @AppStorage("interferenceEnabled")  private var interference: Bool = false
 
-    /// The camera grant can change outside the app (System Settings), and
-    /// changes the instant the user answers the prompt. Re-poll on appear.
-    @State private var cameraStatus: AVAuthorizationStatus =
-        AVCaptureDevice.authorizationStatus(for: .video)
+    /// Whether the camera is ours to use, kept current by JorvikKit — see
+    /// `JorvikPermissionWatcher`. There is no announcement for camera access, so it is the
+    /// once-a-second re-read that catches a change made in System Settings.
+    @StateObject private var camera = JorvikPermissionWatcher {
+        AVCaptureDevice.authorizationStatus(for: .video) == .authorized
+    }
+    /// Whether the system prompt has been through once. A one-way latch, because that is
+    /// what it is: `notDetermined` never comes back, and it is the only thing that decides
+    /// whether the button can still prompt or has to send the user to System Settings.
+    @State private var everAsked: Bool =
+        AVCaptureDevice.authorizationStatus(for: .video) != .notDetermined
 
     var body: some View {
         Section("Permissions") {
             HStack {
                 Text("Camera")
                 Spacer()
-                switch cameraStatus {
-                case .authorized:
+                if camera.isGranted {
                     Label("Granted", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                         .font(.caption)
-                case .notDetermined:
+                } else if !everAsked {
                     Button("Grant Access") {
                         AVCaptureDevice.requestAccess(for: .video) { _ in
                             DispatchQueue.main.async {
-                                cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
+                                everAsked = true
+                                camera.reread()
                             }
                         }
                     }
                     .font(.caption)
-                default:
+                } else {
                     Button("Open System Settings") {
-                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera") {
-                            NSWorkspace.shared.open(url)
-                        }
+                        JorvikPermissionWatcher.openSettings(pane: .camera)
                     }
                     .font(.caption)
                 }
@@ -176,9 +181,6 @@ struct ASCIISaverSettingsContent: View {
             Toggle("Phosphor persistence", isOn: $persistence)
             Toggle("Glitch", isOn: $glitch)
             Toggle("Interference", isOn: $interference)
-        }
-        .onAppear {
-            cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
         }
     }
 
