@@ -51,7 +51,7 @@ sudo pkgutil --forget com.jorviksoftware.ASCIISaver.saver
 sudo pkgutil --forget com.jorviksoftware.ASCIISaver.agent
 ```
 
-## Why an app, not a `.saver`
+## Why an app, not a .saver
 
 ASCII Saver needs the camera, and a `.saver` bundle cannot have it.
 
