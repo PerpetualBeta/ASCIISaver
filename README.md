@@ -2,7 +2,7 @@
 
 A macOS screensaver that renders your live camera feed as ASCII art. Choose from classic green-on-black, Matrix-style, amber terminal, raw camera feed, or iPod-style silhouette modes — each with optional effects like scanlines, phosphor persistence, glitch, and interference.
 
-As of 2.0 it ships as a regular `.app` rather than a `.saver` bundle. See [Why an app, not a `.saver`](#why-an-app-not-a-saver), and [Upgrading from 1.x](#upgrading-from-1x) if you used an earlier version.
+As of 2.0 it ships as a regular `.app` rather than a `.saver` bundle. See [Why an app, not a .saver](#why-an-app-not-a-saver), and [Upgrading from 1.x](#upgrading-from-1x) if you used an earlier version.
 
 ## Requirements
 
