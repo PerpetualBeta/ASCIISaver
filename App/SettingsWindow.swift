@@ -11,10 +11,10 @@ import AVFoundation
 /// sheet wrote so the camera agent could see the same values.
 final class SettingsWindow {
 
-    let activateRecorder: HotkeyRecorderView
-    let screenshotRecorder: HotkeyRecorderView
+    let activateRecorder: JorvikHotkeyRow
+    let screenshotRecorder: JorvikHotkeyRow
 
-    init(activateRecorder: HotkeyRecorderView, screenshotRecorder: HotkeyRecorderView) {
+    init(activateRecorder: JorvikHotkeyRow, screenshotRecorder: JorvikHotkeyRow) {
         self.activateRecorder = activateRecorder
         self.screenshotRecorder = screenshotRecorder
     }
@@ -41,8 +41,8 @@ final class SettingsWindow {
 /// the user first touched the control.
 struct ASCIISaverSettingsContent: View {
 
-    let activateRecorder: HotkeyRecorderView
-    let screenshotRecorder: HotkeyRecorderView
+    let activateRecorder: JorvikHotkeyRow
+    let screenshotRecorder: JorvikHotkeyRow
 
     @AppStorage("idleMinutes")          private var idleMinutes: Int = 5
     @AppStorage("lockOnDismiss")        private var lockOnDismiss: Bool = false
@@ -107,19 +107,17 @@ struct ASCIISaverSettingsContent: View {
 
         Section("Activation") {
             HStack {
-                Text("Idle timeout:")
+                Text("Idle timeout")
+                Spacer()
                 TextField("", value: $idleMinutes, formatter: Self.number(min: 1, max: 1440))
+                    .labelsHidden()
                     .frame(width: 60)
                     .multilineTextAlignment(.trailing)
                 Text("minutes")
-                Spacer()
+                    .foregroundStyle(.secondary)
             }
-            HStack {
-                Text("Activate now:")
-                activateRecorder
-                    .frame(width: 180, height: 24)
-                Spacer()
-            }
+
+            activateRecorder
         }
 
         Section("On dismiss") {
@@ -127,15 +125,12 @@ struct ASCIISaverSettingsContent: View {
         }
 
         Section("Capture") {
-            HStack {
-                Text("Screenshot:")
+            VStack(alignment: .leading, spacing: 4) {
                 screenshotRecorder
-                    .frame(width: 180, height: 24)
-                Spacer()
+                Text("Saves to ~/Pictures/ASCII Saver/")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            Text("Saves to ~/Pictures/ASCII Saver/")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
 
         Section("Picture") {

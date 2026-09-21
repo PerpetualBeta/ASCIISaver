@@ -642,11 +642,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func openSettings() {
         if settingsWindow == nil {
-            let activate = HotkeyRecorderView(
+            let activate = JorvikHotkeyRow(
+                label: "Activate now",
                 storageKey: activateHotkeyKey,
                 onChange: { [weak self] cfg in self?.activateHotkeyChanged(cfg) }
             )
-            let screenshot = HotkeyRecorderView(
+            let screenshot = JorvikHotkeyRow(
+                label: "Screenshot",
                 storageKey: screenshotHotkeyKey,
                 onChange: { [weak self] cfg in self?.screenshotHotkeyChanged(cfg) }
             )
