@@ -60,7 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: StatusItem?
     private var statusItemVisibilityObserver: NSObjectProtocol?
-    private var hotkeyManager = HotkeyManager()
+    private var hotkeyManager = JorvikHotkeyManager(signature: JorvikHotkeyManager.asciiSaverSignature)
     private var settingsWindow: SettingsWindow?
 
     // MARK: - Camera
