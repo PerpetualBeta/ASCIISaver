@@ -349,10 +349,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Set while activation is being held back by a locked screen, so the
+    /// reason is logged once per lock rather than on every tick.
+    private var activationHeldByLock = false
+
     private func tick() {
         let idle = systemIdleSeconds()
         if windows.isEmpty {
             if idle >= idleThresholdSeconds && Date() >= activationAllowedAfter {
+                // Never start behind a lock screen. Nothing would be visible —
+                // loginwindow sits above the saver level — and starting anyway
+                // means turning the CAMERA on while the machine looks shut.
+                //
+                // There was no guard here at all. Lock the Mac with the saver
+                // not showing, walk away, and the idle threshold arrives like
+                // any other: the saver activated and capture began, behind the
+                // lock screen, until someone came back. The README and the
+                // product page both promise there is no path by which frames
+                // are captured behind a lock screen. There was one, and this
+                // is it.
+                //
+                // Demonstrated in the sibling saver's log, which shares this
+                // structure: an idle-driven activation began 15 minutes into a
+                // locked span on 2026-07-07, 15 minutes being its threshold.
+                if LockScreen.screenIsLocked {
+                    if !activationHeldByLock {
+                        asLog("idle threshold reached but the screen is locked — not activating")
+                        activationHeldByLock = true
+                    }
+                    return
+                }
+                activationHeldByLock = false
                 asLog("idle=\(Int(idle))s ≥ threshold — activating")
                 showWindows()
             }
