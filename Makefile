@@ -34,7 +34,7 @@ SWIFT_FRAMEWORKS := Cocoa AVFoundation CoreVideo CoreGraphics QuartzCore \
 SWIFT_SOURCES    := App/main.swift App/AppDelegate.swift \
                     App/ScreensaverWindow.swift \
                     App/StatusItem.swift App/SettingsWindow.swift \
-                    App/HotkeyManager.swift \
+                    App/HotkeyManager.swift App/DisplayWake.swift App/SystemScreenLockSettings.swift \
                     App/LockScreen.swift App/Screenshot.swift \
                     App/Migration.swift \
                     App/SparkleDelegate.swift App/Log.swift \

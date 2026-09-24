@@ -28,7 +28,7 @@ brew install --cask perpetualbeta/jorvik/asciisaver
 1. Launch **ASCII Saver** once from your Applications folder
 2. Grant camera access when macOS prompts — nothing works without it
 3. A small **camera viewfinder** icon appears in the menu bar. That's your only touchpoint with the app; everything else lives in its menu and its **Settings…** window
-4. Choose **Activate Now** from that menu to see it immediately, or leave the Mac idle past your configured timeout
+4. Choose **Activate Now** from that menu to see it immediately, or leave the Mac idle past your configured timeout. To stop it activating for a while, choose **Suspend** from the same menu; the icon changes to an empty viewfinder until you choose **Resume**
 
 Move the mouse or press any key to dismiss.
 
@@ -85,7 +85,7 @@ The trade-off is that it no longer appears in the System Settings screensaver li
 Click the menu bar icon → **Settings…**:
 
 - **Permissions** — camera status, with a button to grant it or to open System Settings if you've previously declined
-- **Activation** — idle timeout in minutes, and a global "Activate now" hotkey
+- **Activation** — a **Suspended** toggle that mirrors the menu's Suspend/Resume, the idle timeout in minutes, and a global "Activate now" hotkey. If one of macOS's own timers ("Start Screen Saver when inactive", or "Turn display off when inactive") is set at or under the idle timeout, an orange note under the idle timeout says which one, because ASCII Saver would never get a turn.
 - **On dismiss** — lock the screen automatically when the saver dismisses
 - **Capture** — a global hotkey that saves the current frame as a PNG to `~/Pictures/ASCII Saver/`
 - **Picture** — colour filter, invert, character size (4–32 pt), frame rate (5–60 fps)
@@ -108,7 +108,8 @@ Updates are EdDSA-signed; your copy will only install genuine Jorvik Software re
 This app looks at your camera, so it is worth being precise about what it does with it.
 
 - **The camera runs only while the saver is on screen.** It is opened when the saver activates and closed when it dismisses. Idle in the menu bar, the app holds no camera session at all.
-- **It is also released the moment the screen locks**, if you use lock-on-dismiss. There is no path by which frames are captured behind a lock screen.
+- **It is also released the moment the screen locks**, however it was locked: by lock-on-dismiss, Lock Now, a hot corner or closing the lid. The same happens when the displays go to sleep. If the display layout changes while the Mac is locked, the saver is not rebuilt, so the camera does not come back on. There is no path by which frames are captured behind a lock screen.
+- **It does not start into a video call.** A call holds the display awake, and while anything does, ASCII Saver does not activate, so it never reaches for the camera the call is using. Nor does it start into a display that has gone dark.
 - **Nothing is recorded, written to disk, or transmitted.** Frames go from the capture callback to the renderer in memory and are overwritten by the next one. The single exception is the screenshot hotkey, which writes a PNG only when you press it.
 - **No telemetry.** No usage reporting, no analytics, and no network traffic beyond Sparkle's appcast fetch. Diagnostic logging is off unless you turn it on with `defaults write cc.jorviksoftware.ASCIISaver debugLogging -bool YES`, and writes only to `~/Library/Logs/ASCII Saver/`.
 - **Person segmentation runs on-device**, via Apple's Vision framework, and only when the Silhouette filter is selected.

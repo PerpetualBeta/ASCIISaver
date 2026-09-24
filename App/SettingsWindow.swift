@@ -46,6 +46,10 @@ struct ASCIISaverSettingsContent: View {
 
     @AppStorage("idleMinutes")          private var idleMinutes: Int = 5
     @AppStorage("lockOnDismiss")        private var lockOnDismiss: Bool = false
+    @AppStorage("activationSuspended")  private var activationSuspended: Bool = false
+    /// The soonest of macOS's own idle timers, re-read when Settings opens
+    /// and when the app becomes active again. See `macScreenLockNote`.
+    @State private var macMinimumTrigger: (seconds: TimeInterval, cause: SystemScreenLockSettings.Cause)?
 
     // The eleven render options carried over from the .saver's options sheet.
     @AppStorage("colourFilter")         private var colourFilter: Int = 0
@@ -108,18 +112,51 @@ struct ASCIISaverSettingsContent: View {
         MenuBarVisibilitySettings()
 
         Section("Activation") {
-            HStack {
-                Text("Idle timeout")
-                Spacer()
-                TextField("", value: $idleMinutes, formatter: Self.number(min: 1, max: 1440))
-                    .labelsHidden()
-                    .frame(width: 60)
-                    .multilineTextAlignment(.trailing)
-                Text("minutes")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Suspended")
+                    Spacer()
+                    Toggle("", isOn: $activationSuspended)
+                        .labelsHidden()
+                        .onChange(of: activationSuspended) { _, suspended in
+                            asLog(suspended ? "activation suspended from Settings" : "activation resumed from Settings")
+                            // Written directly via @AppStorage, so the status
+                            // item, which has no observer on the key itself,
+                            // needs telling to update its icon and menu label.
+                            NotificationCenter.default.post(name: .activationSuspendedChanged, object: nil)
+                        }
+                }
+                Text("While suspended, ASCII Saver will not activate on its own when idle. Activate Now still works, from the menu or its shortcut.")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Idle timeout")
+                    Spacer()
+                    TextField("", value: $idleMinutes, formatter: Self.number(min: 1, max: 1440))
+                        .labelsHidden()
+                        .frame(width: 60)
+                        .multilineTextAlignment(.trailing)
+                    Text("minutes")
+                        .foregroundStyle(.secondary)
+                }
+                if let note = macScreenLockNote {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
+
             activateRecorder
+        }
+        .onAppear { refreshMacScreenLockTimers() }
+        // Nothing tells this app when a System Settings timer changes. Someone
+        // who has just changed one comes back to this app to look, which makes
+        // it active again, so re-read them then.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshMacScreenLockTimers()
         }
 
         Section("On dismiss") {
@@ -182,6 +219,39 @@ struct ASCIISaverSettingsContent: View {
             Toggle("Phosphor persistence", isOn: $persistence)
             Toggle("Glitch", isOn: $glitch)
             Toggle("Interference", isOn: $interference)
+        }
+    }
+
+    /// Logged only when the summary changes, not on every refresh.
+    private static var lastLoggedMacScreenLockSummary: String?
+
+    private func refreshMacScreenLockTimers() {
+        macMinimumTrigger = SystemScreenLockSettings.minimumTrigger
+        let summary = SystemScreenLockSettings.summaryForLogging
+        if summary != Self.lastLoggedMacScreenLockSummary {
+            asLog("macOS screen/display timers: \(summary)")
+            Self.lastLoggedMacScreenLockSummary = summary
+        }
+    }
+
+    /// A warning for the idle-timeout row, shown only when macOS's own screen
+    /// saver, or the display-off timer that applies to this Mac, is set at or
+    /// below the idle timeout. `nil`, so no note at all, otherwise. One whole
+    /// sentence per cause, each naming the row as System Settings labels it.
+    private var macScreenLockNote: String? {
+        guard let trigger = macMinimumTrigger,
+              Double(idleMinutes) * 60 >= trigger.seconds
+        else { return nil }
+        let minutes = Int((trigger.seconds / 60).rounded())
+        switch trigger.cause {
+        case .screensaver:
+            return "“Start Screen Saver when inactive” is set to \(minutes) min in System Settings, so macOS’s own screen saver starts first and ASCII Saver never does."
+        case .displaySleep:
+            return "“Turn display off when inactive” is set to \(minutes) min in System Settings, so the display goes dark before ASCII Saver can start."
+        case .displaySleepBattery:
+            return "“Turn display off on battery when inactive” is set to \(minutes) min in System Settings. On battery, the display goes dark before ASCII Saver can start."
+        case .displaySleepACPower:
+            return "“Turn display off on power adapter when inactive” is set to \(minutes) min in System Settings. On the power adapter, the display goes dark before ASCII Saver can start."
         }
     }
 

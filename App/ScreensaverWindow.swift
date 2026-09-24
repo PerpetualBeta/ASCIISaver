@@ -76,6 +76,21 @@ final class ScreensaverWindow {
     private let window: NSWindow
     private(set) var renderView: ASCIIRenderView!
     private var eventMonitor: Any?
+    /// Whether the dismiss monitor is allowed to act yet. See
+    /// `installDismissMonitor()`: the pointer has to come to rest once
+    /// before movement counts.
+    ///
+    /// Readable from outside because the idle tick in `AppDelegate` has its
+    /// own dismiss path that polls system idle time rather than watching
+    /// events, and it has to hold off on the same condition. Two guards
+    /// deciding the same question by different rules is what produced the
+    /// bug this mechanism exists to fix.
+    private(set) var dismissArmed = false
+    /// Bumped by every re-arm so a superseded settle callback can tell that
+    /// it is stale and do nothing. Not a `Timer`: timers in the default
+    /// run-loop mode stop firing while the run loop is tracking, and this
+    /// code runs either side of a status-menu interaction.
+    private var settleGeneration = 0
     private let onDismiss: () -> Void
     let screen: NSScreen
 
@@ -173,34 +188,79 @@ final class ScreensaverWindow {
 
         renderView.resumeRendering()
 
-        // Grace period before installing the dismiss monitor. When the user
-        // activates via a global hotkey they release the modifiers an instant
-        // after the press, and that release would otherwise dismiss the saver
-        // we just opened. 600ms is longer than any reasonable key-release and
-        // short enough that an intentional dismiss still feels instant.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-            guard let self = self else { return }
-            // .flagsChanged is intentionally OMITTED. Carbon consumes the
-            // keyDown of a global hotkey, but the modifier-up still flows
-            // through NSEvent — listening for it would dismiss the saver every
-            // time a hotkey is used while it runs.
-            self.eventMonitor = NSEvent.addLocalMonitorForEvents(
-                matching: [.mouseMoved, .leftMouseDown, .rightMouseDown,
-                           .otherMouseDown, .scrollWheel, .keyDown]
-            ) { [weak self] event in
-                guard let self = self else { return nil }
-                // Remove the monitor BEFORE invoking dismiss. One cursor flick
-                // generates a burst of mouseMoved events; without this guard
-                // each fires onDismiss again, which in the lock-on-dismiss
-                // path means N parallel lock attempts. Observed on Rainy Day:
-                // 13 locks from a single movement.
-                if let m = self.eventMonitor {
-                    NSEvent.removeMonitor(m)
-                    self.eventMonitor = nil
-                }
-                self.onDismiss()
-                return nil   // swallow — we're dismissing
+        installDismissMonitor()
+    }
+
+    /// How long the pointer has to hold still before movement is treated as a
+    /// request to dismiss. Read live, so it can be tuned without a rebuild:
+    ///
+    ///   defaults write cc.jorviksoftware.ASCIISaver dismissSettleSeconds -float 0.6
+    ///   defaults delete cc.jorviksoftware.ASCIISaver dismissSettleSeconds   # back to the default
+    ///
+    /// The default is Save Cannes', where it was tuned.
+    private static let defaultSettleSeconds: TimeInterval = 0.4
+    private var settleSeconds: TimeInterval {
+        let configured = UserDefaults.standard.double(forKey: "dismissSettleSeconds")
+        return configured > 0 ? configured : Self.defaultSettleSeconds
+    }
+
+    /// The monitor goes on immediately, but it will not act on pointer
+    /// movement or a keystroke until the pointer has stopped at least once.
+    ///
+    /// This replaces a flat 600ms delay before the monitor was installed at
+    /// all. That delay was sized for a key-release. It never accounted for
+    /// Activate Now in the status menu, where the hand is still travelling
+    /// away from the menu when the monitor goes live. Rainy Day, which had the
+    /// same code, has 12 of 816 hand-started activations in its log ending
+    /// 0.7s to 2.8s after they began. No constant can outlast a movement with
+    /// no upper bound; waiting for stillness measures the pause between two
+    /// gestures instead, and that is bounded. Ported from Save Cannes 1.3.1,
+    /// which found it.
+    private func installDismissMonitor() {
+        dismissArmed = false
+        scheduleSettle()
+        // .flagsChanged is intentionally OMITTED. Carbon consumes the keyDown
+        // of a global hotkey, but the modifier-up still flows through NSEvent
+        // — listening for it would dismiss the saver every time a hotkey is
+        // used while it runs.
+        eventMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.mouseMoved, .leftMouseDown, .rightMouseDown,
+                       .otherMouseDown, .scrollWheel, .keyDown]
+        ) { [weak self] event in
+            guard let self = self else { return nil }
+            // Movement and keystrokes wait for the pointer to settle. A mouse
+            // BUTTON or a scroll does not: neither can be produced by the
+            // gesture that started the saver, because a menu item fires on
+            // mouse-up and this monitor does not watch mouse-up.
+            if !self.dismissArmed, event.type == .mouseMoved || event.type == .keyDown {
+                if event.type == .mouseMoved { self.scheduleSettle() }
+                return nil
             }
+            // Remove the monitor BEFORE invoking dismiss. One cursor flick
+            // generates a burst of mouseMoved events; without this each fires
+            // onDismiss again, which in the lock-on-dismiss path means N
+            // parallel lock attempts.
+            if let m = self.eventMonitor {
+                NSEvent.removeMonitor(m)
+                self.eventMonitor = nil
+            }
+            self.settleGeneration &+= 1
+            asLog("dismissing on \(event.type.rawValue)")
+            self.onDismiss()
+            return nil   // swallow — we're dismissing
+        }
+    }
+
+    /// Restarted by every movement while disarmed, so it only fires once the
+    /// pointer has actually stopped.
+    private func scheduleSettle() {
+        settleGeneration &+= 1
+        let generation = settleGeneration
+        let interval = settleSeconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + interval) { [weak self] in
+            guard let self = self, generation == self.settleGeneration else { return }
+            self.dismissArmed = true
+            asLog("dismiss monitor armed — pointer still for \(interval)s")
         }
     }
 
@@ -209,6 +269,8 @@ final class ScreensaverWindow {
             NSEvent.removeMonitor(m)
             eventMonitor = nil
         }
+        settleGeneration &+= 1
+        dismissArmed = false
         // Match the CGDisplayHideCursor from activate(). The hide is
         // ref-counted — an unpaired hide leaves the cursor invisible for
         // everything else the user does afterwards.

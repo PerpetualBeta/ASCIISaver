@@ -12,6 +12,8 @@ final class StatusItem {
 
     private var item: NSStatusItem?
     private weak var appDelegate: AppDelegate?
+    /// The Suspend/Resume row, kept so its title can flip in place.
+    private var suspendResumeItem: NSMenuItem!
 
     init(appDelegate: AppDelegate) {
         self.appDelegate = appDelegate
@@ -48,6 +50,15 @@ final class StatusItem {
             self.applyIcon(to: item)
         }
 
+        // Covers both ways this can change: the menu item below, and the
+        // Settings toggle, which writes the UserDefaults key directly rather
+        // than going through `toggleActivationSuspended()`.
+        NotificationCenter.default.addObserver(
+            forName: .activationSuspendedChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.refreshSuspendResumeState()
+        }
+
         let menu = NSMenu()
         menu.addItem(withTitle: "About ASCII Saver",
                      action: #selector(showAbout), keyEquivalent: "")
@@ -56,6 +67,10 @@ final class StatusItem {
         menu.addItem(withTitle: "Activate Now",
                      action: #selector(activateNow), keyEquivalent: "")
             .target = self
+        let suspendResumeItem = menu.addItem(
+            withTitle: "", action: #selector(toggleSuspendResume), keyEquivalent: "")
+        suspendResumeItem.target = self
+        self.suspendResumeItem = suspendResumeItem
         menu.addItem(.separator())
         menu.addItem(withTitle: "Settings…",
                      action: #selector(openSettings), keyEquivalent: ",")
@@ -69,16 +84,42 @@ final class StatusItem {
             .target = self
         item.menu = menu
         self.item = item
+        refreshSuspendResumeState()
+    }
+
+    /// Keeps the menu item's title and the status icon in step with
+    /// `activationSuspended`, whichever of the two places changed it.
+    private func refreshSuspendResumeState() {
+        let suspended = appDelegate?.isActivationSuspended() ?? false
+        suspendResumeItem?.title = suspended ? "Resume" : "Suspend"
+        if let item { applyIcon(to: item) }
     }
 
     /// SF Symbol — camera viewfinder, the one glyph that says what this thing
-    /// points at. Template image so the system tints it for the active
-    /// appearance (light/dark).
+    /// points at, or the same frame with the camera gone while suspended.
+    /// Template image so the system tints it for the active appearance
+    /// (light/dark).
     private func applyIcon(to item: NSStatusItem) {
         guard let button = item.button else { return }
-        button.image = NSImage(systemSymbolName: "camera.viewfinder",
-                               accessibilityDescription: "ASCII Saver")
+        let suspended = appDelegate?.isActivationSuspended() ?? false
+        button.image = suspended ? Self.suspendedIcon() : Self.normalIcon()
         button.image?.isTemplate = true
+    }
+
+    private static func normalIcon() -> NSImage? {
+        NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "ASCII Saver")
+    }
+
+    /// One complete glyph Apple already drew, not a composite: Save Cannes
+    /// tried compositing a slash over its icon twice, and both looked broken
+    /// at menu-bar size. Falls back to the ordinary glyph if the symbol is
+    /// ever missing, because a nil image draws nothing, and an app that
+    /// vanishes from the menu bar while suspended hides the one state this
+    /// icon exists to show.
+    private static func suspendedIcon() -> NSImage? {
+        NSImage(systemSymbolName: "viewfinder", accessibilityDescription: "ASCII Saver (suspended)")
+            ?? NSImage(systemSymbolName: "camera.viewfinder",
+                       accessibilityDescription: "ASCII Saver (suspended)")
     }
 
     @objc private func showAbout() {
@@ -87,6 +128,11 @@ final class StatusItem {
             repoName: "ASCIISaver",
             productPage: "screensavers/asciisaver"
         )
+    }
+
+    @objc private func toggleSuspendResume() {
+        appDelegate?.toggleActivationSuspended()
+        refreshSuspendResumeState()
     }
 
     @objc private func activateNow() {
