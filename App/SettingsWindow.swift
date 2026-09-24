@@ -74,33 +74,35 @@ struct ASCIISaverSettingsContent: View {
 
     var body: some View {
         Section("Permissions") {
-            HStack {
-                Text("Camera")
-                Spacer()
-                if camera.isGranted {
-                    Label("Granted", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                        .font(.caption)
-                } else if !everAsked {
-                    Button("Grant Access") {
-                        AVCaptureDevice.requestAccess(for: .video) { _ in
-                            DispatchQueue.main.async {
-                                everAsked = true
-                                camera.reread()
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Camera")
+                    Spacer()
+                    if camera.isGranted {
+                        Label("Granted", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .font(.caption)
+                    } else if !everAsked {
+                        Button("Grant Access") {
+                            AVCaptureDevice.requestAccess(for: .video) { _ in
+                                DispatchQueue.main.async {
+                                    everAsked = true
+                                    camera.reread()
+                                }
                             }
                         }
+                        .font(.caption)
+                    } else {
+                        Button("Open System Settings") {
+                            JorvikPermissionWatcher.openSettings(pane: .camera)
+                        }
+                        .font(.caption)
                     }
-                    .font(.caption)
-                } else {
-                    Button("Open System Settings") {
-                        JorvikPermissionWatcher.openSettings(pane: .camera)
-                    }
-                    .font(.caption)
                 }
+                Text("ASCII Saver renders the camera feed as ASCII art. Nothing is recorded, saved, or sent anywhere.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            Text("ASCII Saver renders the camera feed as ASCII art. Nothing is recorded, saved, or sent anywhere.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
 
         MenuBarVisibilitySettings()
@@ -144,19 +146,23 @@ struct ASCIISaverSettingsContent: View {
             Toggle("Invert colours", isOn: $invertColours)
             HStack {
                 Text("Character size:")
+                Spacer()
                 TextField("", value: $fontSize, formatter: Self.decimal(min: 4, max: 32))
+                    .labelsHidden()
                     .frame(width: 60)
                     .multilineTextAlignment(.trailing)
                 Text("pt")
-                Spacer()
+                    .foregroundStyle(.secondary)
             }
             HStack {
                 Text("Frame rate:")
+                Spacer()
                 TextField("", value: $targetFPS, formatter: Self.decimal(min: 5, max: 60))
+                    .labelsHidden()
                     .frame(width: 60)
                     .multilineTextAlignment(.trailing)
                 Text("fps")
-                Spacer()
+                    .foregroundStyle(.secondary)
             }
         }
 
