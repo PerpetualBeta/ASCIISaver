@@ -115,7 +115,7 @@ A **Suspended** toggle that mirrors the menu's Suspend/Resume, the idle timeout 
 
 ### On dismiss
 
-Lock the screen automatically when the saver dismisses.
+Lock the screen automatically when the saver dismisses. The picture freezes and the camera stops the moment you dismiss it, and the still picture stays until the lock screen covers it.
 
 ### Capture
 
@@ -142,7 +142,7 @@ Scanlines, phosphor persistence, glitch, interference.
 This app looks at your camera, so it is worth being precise about what it does with it.
 
 - **The camera runs only while the saver is on screen.** It is opened when the saver activates and closed when it dismisses. Idle in the menu bar, the app holds no camera session at all.
-- **It is also released the moment the screen locks**, however it was locked: by lock-on-dismiss, Lock Now, a hot corner or closing the lid. The same happens when the displays go to sleep. If the display layout changes while the Mac is locked, the saver is not rebuilt, so the camera does not come back on. There is no path by which frames are captured behind a lock screen.
+- **It is also released the moment the screen locks**, however it was locked: by Lock Now, a hot corner, closing the lid or lock-on-dismiss. With lock-on-dismiss it stops sooner still, as you dismiss, before the lock screen appears. The same happens when the displays go to sleep. If the display layout changes while the Mac is locked, the saver is not rebuilt, so the camera does not come back on. There is no path by which frames are captured behind a lock screen.
 - **It does not start into a video call.** A call holds the display awake, and while anything does, ASCII Saver does not activate, so it never reaches for the camera the call is using. Nor does it start into a display that has gone dark.
 - **Nothing is recorded, written to disk, or transmitted.** Frames go from the capture callback to the renderer in memory and are overwritten by the next one. The single exception is the screenshot hotkey, which writes a PNG only when you press it.
 - **No telemetry.** No usage reporting, no analytics, and no network traffic beyond Sparkle's appcast fetch. Diagnostic logging is off unless you turn it on with `defaults write cc.jorviksoftware.ASCIISaver debugLogging -bool YES`, and writes only to `~/Library/Logs/ASCII Saver/`.

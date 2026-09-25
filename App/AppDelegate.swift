@@ -567,6 +567,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // tear down. The lock screen sits above .screenSaver level, so it
             // provably covers us the moment it is up.
             asLog("dismiss with lock — pausing on screenIsLocked, teardown deferred to unlock")
+            // Pause now, not when the lock confirms. The lock screen normally
+            // covers us in 0.1 to 0.4s, but under load it has taken over 4s,
+            // and all that time the picture carried on as if the key press had not
+            // been heard. A still frame answers the input at once, and the
+            // camera stops sooner.
+            pauseForCover(reason: "dismissed, waiting for the lock screen")
             observeLockThenPause()
             LockScreen.lock()
         } else {
@@ -602,6 +608,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // lock observer in `observeWakeAndUnlock`, which hears this same
             // notification. This one only confirms the lock for the net below.
             self.cleanupLockObserver()
+            // The saver paused when it was dismissed, so the permanent
+            // observer logs nothing now. This line keeps the lock's latency
+            // readable in the log.
+            asLog("screenIsLocked received — the lock screen is up")
         }
         // Safety net: if no lock notification arrives within 4 seconds the
         // saver would otherwise stay up forever with no lock UI over it.
