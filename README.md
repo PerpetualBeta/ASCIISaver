@@ -2,7 +2,17 @@
 
 A macOS screensaver that renders your live camera feed as ASCII art. Choose from classic green-on-black, Matrix-style, amber terminal, raw camera feed, or iPod-style silhouette modes — each with optional effects like scanlines, phosphor persistence, glitch, and interference.
 
-As of 2.0 it ships as a regular `.app` rather than a `.saver` bundle. See [Why an app, not a .saver](#why-an-app-not-a-saver), and [Upgrading from 1.x](#upgrading-from-1x) if you used an earlier version.
+As of 2.0 it ships as a regular `.app` rather than a `.saver` bundle. See [Upgrading from 1.x](#upgrading-from-1x) if you used an earlier version, and [ARCHITECTURE.md](ARCHITECTURE.md#why-an-app-not-a-saver) for why.
+
+## Features
+
+- **Your camera, as ASCII art**, live. See [Colour filters](#colour-filters).
+- **Five looks**: Classic, Matrix, Amber, Raw Feed and an iPod-style Silhouette.
+- **Four effects**: scanlines, phosphor persistence, glitch and interference. See [Effects](#effects).
+- **Every display at once**, all from one camera. See [Multiple displays](#multiple-displays).
+- **The camera runs only while the saver is on screen**, and is released the moment the screen locks. See [Privacy](#privacy).
+- **Stays out of the way.** It won't start during a video call or into a dark display, it can be suspended from the menu bar, and Settings warns you when one of macOS's own timers would beat it.
+- **Screenshots** of the current frame from a hotkey. See [Capture](#capture).
 
 ## Requirements
 
@@ -23,18 +33,23 @@ Or install it with [Homebrew](https://brew.sh):
 brew install --cask perpetualbeta/jorvik/asciisaver
 ```
 
-## Getting Started
+### First launch
 
 1. Launch **ASCII Saver** once from your Applications folder
 2. Grant camera access when macOS prompts — nothing works without it
 3. A small **camera viewfinder** icon appears in the menu bar. That's your only touchpoint with the app; everything else lives in its menu and its **Settings…** window
-4. Choose **Activate Now** from that menu to see it immediately, or leave the Mac idle past your configured timeout. To stop it activating for a while, choose **Suspend** from the same menu; the icon changes to an empty viewfinder until you choose **Resume**
 
-Move the mouse or press any key to dismiss.
+ASCII Saver registers itself for launch at user login on first run; toggle that off in Settings → General if you'd rather start it manually.
 
-The app does not add itself to your login items automatically — turn on **Launch at Login** in Settings → General if you want it running after a restart.
+### Uninstalling
 
-## Upgrading from 1.x
+Quit ASCII Saver from its menu bar icon, then drag `ASCII Saver.app` to the Trash. If you installed it with Homebrew, run this instead:
+
+```sh
+brew uninstall --cask perpetualbeta/jorvik/asciisaver
+```
+
+### Upgrading from 1.x
 
 Version 2.0 is the same screensaver, delivered differently. Three things change for existing users:
 
@@ -51,17 +66,19 @@ sudo pkgutil --forget com.jorviksoftware.ASCIISaver.saver
 sudo pkgutil --forget com.jorviksoftware.ASCIISaver.agent
 ```
 
-## Why an app, not a .saver
+## Using ASCII Saver
 
-ASCII Saver needs the camera, and a `.saver` bundle cannot have it.
+### Starting and stopping
 
-Screen savers run inside `legacyScreenSaver`, Apple's host process. That host owns the TCC identity, so a saver can never hold a camera permission of its own. Version 1.x worked around this with a second process: `ASCIISaverCameraAgent.app` owned the capture session, converted frames to greyscale, and published them to the saver through a memory-mapped file with a seqlock. Start and stop were Darwin notifications. Settings had to be written out a second time, to a plist in `/tmp`, because `ScreenSaverDefaults` was not visible across the process boundary. The two halves were bound together by an app-group entitlement and shipped as a two-component installer.
+Choose **Activate Now** from the menu bar icon to see it immediately, or leave the Mac idle past your configured timeout. Move the mouse or press any key to dismiss.
 
-All of that existed to work around one restriction. As a regular app there is no restriction: it opens the camera itself, renders in the same process, and the entire IPC layer is gone — along with the agent, the app group, the `/tmp` plist and the multi-component installer.
+To stop it activating for a while, choose **Suspend** from the same menu; the icon changes to an empty viewfinder until you choose **Resume**.
 
-The trade-off is that it no longer appears in the System Settings screensaver list. You launch it once and it runs from then on. [Rainy Day](https://jorviksoftware.cc/screensavers/rainyday) made the same move first, for different reasons — WebKit is throttled to a standstill inside the screensaver host — and it is now the default shape for Jorvik screensavers.
+### Multiple displays
 
-## Colour Filters
+Each connected display gets its own fullscreen window, all fed from a single shared capture session — one camera, however many screens. Input on any of them dismisses all of them.
+
+### Colour filters
 
 | Filter | Description |
 |--------|-------------|
@@ -71,7 +88,7 @@ The trade-off is that it no longer appears in the System Settings screensaver li
 | **Raw Feed** | Tinted greyscale camera image (not ASCII) |
 | **Silhouette** | iPod-style person outline with cycling colours (uses ML person segmentation) |
 
-## Effects
+### Effects
 
 | Effect | Description |
 |--------|-------------|
@@ -80,28 +97,45 @@ The trade-off is that it no longer appears in the System Settings screensaver li
 | **Glitch** | Random pixel offsets for a corruption effect |
 | **Interference** | Random static bands and tear lines |
 
-## Configuration
+## Settings
 
-Click the menu bar icon → **Settings…**:
+Click the menu bar icon → **Settings…**. The sections below are in the same order as the window. Settings apply immediately to a running saver — no Save button, and no need to restart.
 
-- **Permissions** — camera status, with a button to grant it or to open System Settings if you've previously declined
-- **Activation** — a **Suspended** toggle that mirrors the menu's Suspend/Resume, the idle timeout in minutes, and a global "Activate now" hotkey. If one of macOS's own timers ("Start Screen Saver when inactive", or "Turn display off when inactive") is set at or under the idle timeout, an orange note under the idle timeout says which one, because ASCII Saver would never get a turn.
-- **On dismiss** — lock the screen automatically when the saver dismisses
-- **Capture** — a global hotkey that saves the current frame as a PNG to `~/Pictures/ASCII Saver/`
-- **Picture** — colour filter, invert, character size (4–32 pt), frame rate (5–60 fps)
-- **Orientation** — rotation (none, 90° right, 90° left, 180°) and horizontal/vertical mirroring
-- **Effects** — scanlines, phosphor persistence, glitch, interference
-- **General** — Launch at Login
+### Permissions
 
-Settings apply immediately to a running saver — no Save button, and no need to restart.
+Camera status, with a button to grant it or to open System Settings if you've previously declined.
 
-## Auto-update
+### Menu Bar
 
-ASCII Saver 2.0 uses [Sparkle 2.x](https://sparkle-project.org/) for auto-update, checked daily against `https://jorviksoftware.cc/appcasts/asciisaver.xml`. Trigger a manual check from the menu's **Check for Updates…** item.
+**Show icon in menu bar** hides the viewfinder status icon while ASCII Saver keeps running. Re-open ASCII Saver from your Applications folder to bring the icon back. *Shown only on macOS 14–15 — on macOS 26 (Tahoe) and later, use System Settings → Menu Bar, which provides this natively.*
 
-Version 1.x had no update mechanism at all — a `.saver` has no process of its own in which to run one. This is new.
+### Activation
 
-Updates are EdDSA-signed; your copy will only install genuine Jorvik Software releases.
+A **Suspended** toggle that mirrors the menu's Suspend/Resume, the idle timeout in minutes (5 by default), and a global "Activate now" hotkey. If one of macOS's own timers ("Start Screen Saver when inactive", or "Turn display off when inactive") is set at or under the idle timeout, an orange note under the idle timeout says which one, because ASCII Saver would never get a turn.
+
+### On dismiss
+
+Lock the screen automatically when the saver dismisses.
+
+### Capture
+
+A global hotkey that saves the current frame as a PNG to `~/Pictures/ASCII Saver/`.
+
+### Picture
+
+Colour filter, invert, character size (4–32 pt), frame rate (5–60 fps).
+
+### Orientation
+
+Rotation (none, 90° right, 90° left, 180°) and horizontal/vertical mirroring.
+
+### Effects
+
+Scanlines, phosphor persistence, glitch, interference.
+
+### General
+
+**Launch at Login.**
 
 ## Privacy
 
@@ -114,31 +148,45 @@ This app looks at your camera, so it is worth being precise about what it does w
 - **No telemetry.** No usage reporting, no analytics, and no network traffic beyond Sparkle's appcast fetch. Diagnostic logging is off unless you turn it on with `defaults write cc.jorviksoftware.ASCIISaver debugLogging -bool YES`, and writes only to `~/Library/Logs/ASCII Saver/`.
 - **Person segmentation runs on-device**, via Apple's Vision framework, and only when the Silhouette filter is selected.
 
-## Multi-display
+## Auto-update
 
-Each connected display gets its own fullscreen window, all fed from a single shared capture session — one camera, however many screens. Input on any of them dismisses all of them.
+ASCII Saver 2.0 uses [Sparkle 2.x](https://sparkle-project.org/) for auto-update, checked daily against `https://jorviksoftware.cc/appcasts/asciisaver.xml`. Trigger a manual check from the menu's **Check for Updates…** item.
 
-## Architecture
+Version 1.x had no update mechanism at all — a `.saver` has no process of its own in which to run one. This is new.
 
-A regular `.app` with `LSUIElement=YES`, signed with the team Developer ID, which polls system idle time and shows an `NSWindow` at `.screenSaver` level on every `NSScreen` when you've been idle past the threshold.
+Updates are EdDSA-signed; your copy will only install genuine Jorvik Software releases.
 
-- **App** (`App/`) — lifecycle and idle polling, the screensaver windows, status menu, settings, hotkeys, lock-screen and screenshot integration, and the 1.x settings migration.
-- **Render** (`Render/ASCIIRenderView.swift`) — the ASCII renderer, driven by a `CVDisplayLink`. Unchanged in substance from 1.x; only its frame source moved.
-- **Camera** (`Camera/`) — `CameraCaptureService` (AVFoundation), `PersonSegmentationService` (Vision), and `FrameSource`, the in-process replacement for the old shared-memory reader.
-- **JorvikKit** (`App/JorvikKit/`) — vendored shared components from the Jorvik suite.
-- **Sparkle** (`Sparkle.framework`) — vendored 2.9.1 binary, embedded under `Contents/Frameworks/`.
+## How it works
+
+Why ASCII Saver is an app rather than a `.saver`, and how the camera, renderer and windows fit together, are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Building from Source
 
-ASCII Saver builds via the shared Jorvik `release.mk`. With the `jorvik-release` sibling repo cloned alongside it and [GNU Make](https://formulae.brew.sh/formula/make) 4 installed:
+The build is driven by the shared [`release.mk`](https://github.com/PerpetualBeta/jorvik-release) Make include, so `jorvik-release` has to be checked out **beside this repo** — the Makefile looks for it at `../jorvik-release/`. macOS ships GNU Make 3.81 as `make`, which is too old, so `gmake` comes from [Homebrew](https://brew.sh).
 
-- Clone the repo: `git clone https://github.com/PerpetualBeta/ASCIISaver.git`
-- Local install (signed with the Jorvik Developer ID): `gmake dev-build`
-- Run the freshly-built copy: `gmake run`
-- Rebuild the icon from `Resources/AppIcon.iconset`: `gmake icon`
-- Signed, notarised, stapled `.zip` + `.pkg` ready to ship: `gmake release`
+```bash
+brew install make   # GNU Make 4+, if you do not already have gmake
+git clone https://github.com/PerpetualBeta/jorvik-release.git
+git clone https://github.com/PerpetualBeta/ASCIISaver.git
+cd ASCIISaver
+gmake build
+open ".build/ASCII Saver.app"
+```
+
+Other targets:
+
+- `gmake dev-build` — local build signed with the Jorvik Developer ID
+- `gmake run` — run the freshly-built copy
+- `gmake icon` — rebuild the icon from `Resources/AppIcon.iconset`
+- `gmake release` — signed, notarised, stapled `.zip` and `.pkg` ready to ship
 
 No Xcode project — the 1.x two-target `.xcodeproj` went with the agent.
+
+## The other Jorvik screensavers
+
+- **[Rainy Day](https://jorviksoftware.cc/screensavers/rainyday)** — raindrops gather on a pane of glass and slip down it, refracting the photograph behind them. The app that established this shape.
+- **[Save Cannes](https://jorviksoftware.cc/screensavers/savecannes)** — plays your own films, photographs and live streams, on every display or on just one.
+- **[Reverie](https://jorviksoftware.cc/screensavers/reverie)** — roulette curves drawn progressively in dark ink over an animated wavescape. Still a `.saver` bundle, and rightly so: it needs no permission for anything, so it has no reason to be an app.
 
 ---
 
