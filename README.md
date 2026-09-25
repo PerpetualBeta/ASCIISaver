@@ -115,7 +115,7 @@ A **Suspended** toggle that mirrors the menu's Suspend/Resume, the idle timeout 
 
 ### On dismiss
 
-Lock the screen automatically when the saver dismisses. The picture freezes and the camera stops the moment you dismiss it, and the still picture stays until the lock screen covers it.
+Lock the screen automatically when the saver dismisses. The picture freezes and the camera stops the moment you dismiss it, and the still picture stays until the lock screen covers it. While the saver is showing, the Mac is not locked yet: the lock begins when you dismiss it, because nothing but macOS can draw over the lock screen. So with this on, ASCII Saver holds the Mac in kiosk mode while it is up. The app switcher, Mission Control and the force quit panel are off, and any input, or anything taking focus from the saver, locks the Mac within about a tenth of a second. To lock the Mac straight away instead, press the Touch ID key: macOS locks at once, the saver pauses under the lock screen, and a touch unlocks the Mac and closes the saver.
 
 ### Capture
 
